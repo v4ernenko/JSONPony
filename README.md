@@ -16,9 +16,9 @@ JSONPony('http://...')
 
 ## Options
 
-- `timeout` (default: 5000)
-- `charset` (default: 'UTF-8')
-- `callbackParam` (default: 'callback')
+- `timeout` (default: `5000`)
+- `charset` (default: `UTF-8`)
+- `callbackParam` (default: `callback`)
 
 ## License
 
