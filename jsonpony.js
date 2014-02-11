@@ -1,7 +1,7 @@
 /**
 * @overview Yet another JSONP request manager with superagent-like API.
 * @license MIT
-* @version 0.0.1
+* @version 0.1.0
 * @author Vadim Chernenko
 * @see {@link https://github.com/v4ernenko/JSONPony|JSONPony source code repository}
 */
