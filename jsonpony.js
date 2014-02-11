@@ -1,7 +1,7 @@
 /**
 * @overview Yet another JSONP request manager with superagent-like API.
 * @license MIT
-* @version 0.1.0
+* @version 0.2.0
 * @author Vadim Chernenko
 * @see {@link https://github.com/v4ernenko/JSONPony|JSONPony source code repository}
 */
@@ -198,11 +198,23 @@ var JSONPony = (function (win, doc, undefined) {
 
     win[Request.STORAGE] = win[Request.STORAGE] || {};
 
-    return function (url, callback) {
-        if (util.isFunction(callback)) {
-            return new Request(url).end(callback);
+    return function (url, params, callback) {
+        var request = new Request(url);
+
+        if (util.isFunction(params)) {
+            callback = params;
+
+            params = null;
         }
 
-        return new Request(url);
+        if (params) {
+            request.set(params);
+        }
+
+        if (callback) {
+            request.end(callback);
+        } else {
+            return request;
+        }
     };
 })(window, window.document);
