@@ -5,13 +5,25 @@ Yet another JSONP request manager with superagent-like API.
 ## Usage
 
 ```js
-JSONPony('http://...', function (error, reply) {});
+var url = 'http://...',
 
-JSONPony('http://...')
+    params = {
+        id: [1, 2, 3],
+        action: 'delete'
+    },
+
+    callback = function (error, reply) {};
+
+JSONPony(url)
+    .set(params)
     .use('timeout', 10000)
-    .set('text', 'Some text')
-    .set({id: [1, 2, 3], action: 'delete'})
-    .end(function (error, reply) {});
+    .end(callback);
+
+JSONPony(url, callback);
+
+JSONPony(url, params, callback);
+
+JSONPony(url, params).end(callback);
 ```
 
 ## Options
