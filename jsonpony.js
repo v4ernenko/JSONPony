@@ -1,7 +1,7 @@
 /**
 * @overview Yet another JSONP request manager with superagent-like API.
 * @license MIT
-* @version 0.2.0
+* @version 0.3.0
 * @author Vadim Chernenko
 * @see {@link https://github.com/v4ernenko/JSONPony|JSONPony source code repository}
 */
@@ -25,7 +25,7 @@ var JSONPony = (function (win, doc, undefined) {
             })(),
 
             isObject: function (value) {
-                return value !== null && typeof value === 'object';
+                return typeof value === 'object' && value !== null;
             },
 
             isString: function (value) {
@@ -37,7 +37,7 @@ var JSONPony = (function (win, doc, undefined) {
             }
         },
 
-        byTag = 'getElementsByTagName';
+        encURI = win.encodeURIComponent;
 
     var Request = function (url) {
         if (!url || !util.isString(url)) {
@@ -45,13 +45,9 @@ var JSONPony = (function (win, doc, undefined) {
         }
 
         this._url = url;
-
         this._params = [];
-
         this._timeout = 5000;
-
         this._charset = 'UTF-8';
-
         this._callbackParam = 'callback';
     };
 
@@ -85,39 +81,38 @@ var JSONPony = (function (win, doc, undefined) {
     };
 
     Request.prototype.set = function (param, value) {
+        var i, n, key;
+
         if (util.isObject(param)) {
-            for (var key in param) {
+            for (key in param) {
                 this.set(key, param[key]);
             }
 
             return this;
         }
 
-        param = win.encodeURIComponent(param);
+        param = encURI(param);
 
         if (!util.isArray(value)) {
             value = [value];
         }
 
-        var i = 0,
-
-            n = value.length;
-
-        for (; i < n; i++) {
-            this._params.push(param + '=' + win.encodeURIComponent(value[i]));
+        for (i = 0, n = value.length; i < n; i++) {
+            this._params.push(param + '=' + encURI(value[i]));
         }
 
         return this;
     };
 
-    Request.prototype.end = function (callback) {
+    Request.prototype.end = function (callback, context) {
         var url = this._url,
 
             key = '_' + util.getIndex().toString(36),
 
             timer,
 
-            parent = doc[byTag]('head')[0] || doc.documentElement,
+            parent = doc.getElementsByTagName('head')[0] ||
+                     doc.documentElement,
 
             params = this._params,
 
@@ -143,7 +138,7 @@ var JSONPony = (function (win, doc, undefined) {
                 }, 0);
             },
 
-            callbackParam = win.encodeURIComponent(this._callbackParam);
+            callbackParam = encURI(this._callbackParam);
 
         if (!util.isFunction(callback)) {
             callback = noop;
@@ -152,7 +147,7 @@ var JSONPony = (function (win, doc, undefined) {
         win[Request.STORAGE][key] = function (reply) {
             delete win[Request.STORAGE][key];
 
-            callback(null, reply);
+            callback.call(context, null, reply);
         };
 
         params.push(callbackParam + '=' + Request.STORAGE + '.' + key);
@@ -168,7 +163,7 @@ var JSONPony = (function (win, doc, undefined) {
                 cleanup();
 
                 if (event.type === 'error') {
-                    callback(new Error('Network error!'));
+                    callback.call(context, new Error('Network error!'));
                 }
             };
         } else if (script.readyState) {
@@ -187,11 +182,13 @@ var JSONPony = (function (win, doc, undefined) {
 
                 cleanup();
 
-                callback(new Error('Timeout error!'));
+                callback.call(context, new Error('Timeout error!'));
             }, timeout);
         }
 
         parent.appendChild(script);
+
+        return new this.constructor(this._url);
     };
 
     Request.STORAGE = '_JSONPONY_';
@@ -211,10 +208,6 @@ var JSONPony = (function (win, doc, undefined) {
             request.set(params);
         }
 
-        if (callback) {
-            request.end(callback);
-        } else {
-            return request;
-        }
+        return callback ? request.end(callback) : request;
     };
 })(window, window.document);
